@@ -4,9 +4,9 @@ import Pagination from "./Pagination";
 
 function App() {
   const [items, setItems] = useState([]);
-  const [text, setText] = useState(10)
-
-  const [pageCount, setpageCount] = useState(0);
+  const [text, setText] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageCount, setpageCount] = useState(1);
   const [total, setTotal] = useState(0)
   const [postsPerPage, setPostsPerPage] = useState(10)
 
@@ -20,22 +20,29 @@ function App() {
       const total = res.headers.get("x-total-count");
       setTotal(total)
       setpageCount(Math.ceil(total / postsPerPage));
-      // console.log(Math.ceil(total/12));
       setItems(data);
     };
 
     getComments();
   }, [postsPerPage]);
 
-  const fetchComments = async (currentPage) => {
+  const fetchComments = async (pageClicked) => {
+    console.log(pageClicked)
+    let newPage = pageClicked === 'Previous' ? currentPage - 1 : (pageClicked == 'Next' ? currentPage + 1 : pageClicked);
+    newPage = newPage > pageCount ? pageCount : newPage;
+    newPage = newPage < 1 ? 1 : newPage;
+
+    setCurrentPage(newPage)
+
     const res = await fetch(
-      `https://jsonplaceholder.typicode.com/comments?_page=${currentPage}&_limit=${postsPerPage}`
+      `https://jsonplaceholder.typicode.com/comments?_page=${newPage}&_limit=${postsPerPage}`
     );
     const data = await res.json();
     return data;
   };
 
   const handlePageClick = async (currentPage) => {
+    if (currentPage === '...') return
     const commentsFormServer = await fetchComments(currentPage);
     setItems(commentsFormServer);
   };
@@ -65,7 +72,6 @@ function App() {
         postsPerPage={postsPerPage}
         paginate={handlePageClick}
       />
-
 
     </div>
   );
